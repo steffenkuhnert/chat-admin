@@ -53,13 +53,22 @@
 
     chatButton.addEventListener("click", () => {
       if (!chatLoaded) {
-        chatLoaded = true; // 💡 Verhindert mehrfaches Nachladen des Chats
+        chatLoaded = true;
         console.log("Chat-Button wurde geklickt! Lade LiveChat...");
         loadChatScript();
       } else {
         console.warn("Chat-Skript wurde bereits geladen.");
       }
+    
+      // 💡 Versuche, den LiveChat zu öffnen, falls es bereits geladen wurde
+      if (window.LiveChatWidget) {
+        console.log("LiveChat-Widget gefunden. Öffne Chat...");
+        window.LiveChatWidget.call("maximize");
+      } else {
+        console.warn("LiveChat-Widget noch nicht verfügbar.");
+      }
     });
+    
 
     document.body.appendChild(chatButton);
     console.log("Chat-Button wurde erfolgreich erstellt!");
