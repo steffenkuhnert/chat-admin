@@ -30,8 +30,15 @@
       return;
     }
 
+    // 💡 Prüfen, ob der Button bereits existiert (verhindert Duplikate!)
+    if (document.getElementById("chat-button")) {
+      console.warn("Chat-Button existiert bereits. Kein neuer Button wird erstellt.");
+      return;
+    }
+
     console.log("Erstelle Chat-Button...");
     const chatButton = document.createElement("button");
+    chatButton.id = "chat-button"; // 💡 Eindeutige ID setzen, um Mehrfach-Erstellung zu verhindern
     chatButton.innerText = config.button_text;
     chatButton.style.position = "fixed";
     chatButton.style.bottom = `${config.position_bottom}px`;
@@ -53,8 +60,14 @@
   }
 
   function loadChatScript() {
+    if (document.getElementById("chat-script")) {
+      console.warn("LiveChat-Skript ist bereits geladen.");
+      return;
+    }
+
     console.log("Lade Chat-Skript...");
     const script = document.createElement("script");
+    script.id = "chat-script"; // 💡 Eindeutige ID, um doppeltes Laden zu vermeiden
     script.src = "https://cdn.livechatinc.com/tracking.js";
     script.async = true;
     document.head.appendChild(script);
