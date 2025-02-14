@@ -2,6 +2,8 @@
   const SUPABASE_URL = "https://woncqwpykmpabylrhzcw.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvbmNxd3B5a21wYWJ5bHJoemN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk1NTM3NjYsImV4cCI6MjA1NTEyOTc2Nn0.3SzQqBxBADQQvz376890008cSX_ACYcHJ8rlBCFcY24";
 
+  let chatLoaded = false; // 💡 Verhindert mehrfaches Laden!
+
   async function getChatConfig(domain) {
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/chat_config?domain=eq.${domain}&select=*`, {
@@ -30,7 +32,6 @@
       return;
     }
 
-    // 💡 Prüfen, ob der Button bereits existiert (verhindert Duplikate!)
     if (document.getElementById("chat-button")) {
       console.warn("Chat-Button existiert bereits. Kein neuer Button wird erstellt.");
       return;
@@ -38,7 +39,7 @@
 
     console.log("Erstelle Chat-Button...");
     const chatButton = document.createElement("button");
-    chatButton.id = "chat-button"; // 💡 Eindeutige ID setzen, um Mehrfach-Erstellung zu verhindern
+    chatButton.id = "chat-button";
     chatButton.innerText = config.button_text;
     chatButton.style.position = "fixed";
     chatButton.style.bottom = `${config.position_bottom}px`;
@@ -51,8 +52,13 @@
     chatButton.style.cursor = "pointer";
 
     chatButton.addEventListener("click", () => {
-      console.log("Chat-Button wurde geklickt!");
-      loadChatScript();
+      if (!chatLoaded) {
+        chatLoaded = true; // 💡 Verhindert mehrfaches Nachladen des Chats
+        console.log("Chat-Button wurde geklickt! Lade LiveChat...");
+        loadChatScript();
+      } else {
+        console.warn("Chat-Skript wurde bereits geladen.");
+      }
     });
 
     document.body.appendChild(chatButton);
@@ -67,13 +73,19 @@
 
     console.log("Lade Chat-Skript...");
     const script = document.createElement("script");
-    script.id = "chat-script"; // 💡 Eindeutige ID, um doppeltes Laden zu vermeiden
+    script.id = "chat-script";
     script.src = "https://cdn.livechatinc.com/tracking.js";
     script.async = true;
     document.head.appendChild(script);
   }
 
   async function loadChatConfig() {
+    if (chatLoaded) {
+      console.warn("Chat-Konfiguration wurde bereits geladen. Kein erneutes Laden.");
+      return;
+    }
+
+    chatLoaded = true; // 💡 Setzt das Flag, um mehrfaches Laden zu verhindern
     const domain = window.location.hostname;
     const config = await getChatConfig(domain);
 
@@ -84,23 +96,8 @@
     }
   }
 
-  // 💡 CORS-Schutz umgehen: Skript über API-Route nachladen
-  async function getChatScript() {
-    try {
-      const response = await fetch("https://chat-admin-production-be12.up.railway.app/api/chat-widget");
-      if (!response.ok) {
-        console.error("Fehler beim Abrufen des Chat-Widgets:", response.statusText);
-        return;
-      }
-
-      const scriptText = await response.text();
-      eval(scriptText); // Führt das geladene JavaScript aus
-    } catch (error) {
-      console.error("Fehler beim Laden des Chat-Widgets:", error);
-    }
+  // 💡 Skript nur einmal nachladen
+  if (!chatLoaded) {
+    await loadChatConfig();
   }
-
-  // 💡 Erst Chat-Konfiguration laden, dann Skript nachladen
-  await loadChatConfig();
-  await getChatScript();
 })();
